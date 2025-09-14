@@ -48,19 +48,43 @@ export class RatesService {
     }
   }
 
-  async getPopularRates(): Promise<CurrencyPair[]> {
+  async getPopularRates() {
     try {
-      const response = await fetch('https://www.google.com/finance/markets/currencies');
+      const response = await fetch('https://www.google.com/finance/markets/currencies', {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0',
+        },
+      });
+
       if (!response.ok) {
-        throw new Error(`Ошибка запроса: ${response.status}`);
+        throw new Error(`Ошибка загрузки: ${response.status}`);
       }
 
       const html = await response.text();
       const $ = cheerio.load(html);
-      const rates: CurrencyPair[] = [];
 
+      // выбираем второй ul внутри role="main"
+      const secondUl = $('div[role="main"] ul').eq(1);
+      
+      if (!secondUl || secondUl.length === 0) {
+        throw new Error('Второй список ul не найден');
+      }
 
-      return rates;
+      const pairs: CurrencyPair[] = [];
+
+      secondUl.find('li').each((_, li) => {
+        const text = $(li).text().trim().slice(3,12).split(' / ');
+        const rate = parseFloat($(li).find('span').first().text().trim());
+        pairs.push({
+          base: text[0],
+          target: text[1],
+          rate: rate,
+          amount: 1,
+        });
+      });
+
+      return pairs;
     } catch (err) {
       throw new HttpException(
         `Ошибка при получении данных: ${err.message}`,
