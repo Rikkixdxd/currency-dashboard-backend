@@ -6,7 +6,7 @@ import { CurrencyConvertToSelected, CurrencyPair } from './rates.type';
 export class RatesService {
   private currencyToManyCache: CurrencyConvertToSelected = {};
   private popularCurrencyRates: CurrencyPair[] = [];
-  private testMode = process.env.TESTMODE; // включи/выключи тестовый режим
+  private testMode = process.env.TESTMODE ?? false; // включи/выключи тестовый режим
 
   async getRateByCode(code: string): Promise<CurrencyPair[]> 
   {
