@@ -1,13 +1,22 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import * as cheerio from 'cheerio';
-import { CurrencyPair } from './rates.type';
+import { CurrencyConvertToSelected, CurrencyPair } from './rates.type';
 
 @Injectable()
 export class RatesService {
-  // private readonly url = 'https://www.x-rates.com/table/?from=RUB&amount=1';
+  private currencyToManyCache: CurrencyConvertToSelected = {};
+  private popularCurrencyRates: CurrencyPair[] = [];
+  private testMode = process.env.TESTMODE; // включи/выключи тестовый режим
 
-  async getRateByCode(code: string): Promise<CurrencyPair[]> {
-
+  async getRateByCode(code: string): Promise<CurrencyPair[]> 
+  {
+    if (this.testMode && this.currencyToManyCache[code] && Math.random() > 0.7) {
+      return this.currencyToManyCache[code].map((item) => ({
+        ...item,
+        rate: parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)), // колебания ±5%
+      }));
+    }
+    
     const url = new URL('https://www.x-rates.com/table/')
     url.searchParams.append('from', code);
     url.searchParams.append('amount', '1');
@@ -39,6 +48,8 @@ export class RatesService {
         }
       });
 
+      this.currencyToManyCache[code] = rates
+      
       return rates;
     } catch (err) {
       throw new HttpException(
@@ -49,6 +60,14 @@ export class RatesService {
   }
 
   async getPopularRates() {
+
+    if (this.testMode && this.popularCurrencyRates.length && Math.random() > 0.7) {
+      return this.popularCurrencyRates.map((item) => ({
+        ...item,
+        rate: parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)), // колебания ±5%
+      }));
+    }
+    
     try {
       const response = await fetch('https://www.google.com/finance/markets/currencies', {
         headers: {
@@ -83,6 +102,8 @@ export class RatesService {
           amount: 1,
         });
       });
+
+      this.popularCurrencyRates = pairs;
 
       return pairs;
     } catch (err) {
