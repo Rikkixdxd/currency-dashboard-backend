@@ -10,10 +10,10 @@ export class RatesService {
 
   async getRateByCode(code: string): Promise<CurrencyPair[]> 
   {
-    if (this.testMode && this.currencyToManyCache[code] && Math.random() > 0.7) {
+    if (this.testMode && this.currencyToManyCache[code]) {
       return this.currencyToManyCache[code].map((item) => ({
         ...item,
-        rate: parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)), // колебания ±5%
+        rate: Math.random() > 0.9 ? parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)) : item.rate, // колебания ±5%
       }));
     }
     
@@ -64,7 +64,7 @@ export class RatesService {
     if (this.testMode && this.popularCurrencyRates.length && Math.random() > 0.7) {
       return this.popularCurrencyRates.map((item) => ({
         ...item,
-        rate: parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)), // колебания ±5%
+        rate: Math.random() > 0.9 ? parseFloat((item.rate * (1 + (Math.random() - 0.5) / 10)).toFixed(4)) : item.rate, // колебания ±5%
       }));
     }
     
